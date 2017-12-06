@@ -1,5 +1,6 @@
-import psycopg2
+#!/usr/bin/env python
 from datetime import datetime
+import psycopg2
 
 
 def connect():
@@ -12,11 +13,11 @@ def popular_article():
     What are the most popular three articles of all time? """
     db = connect()
     c = db.cursor()
-    c.execute("select pop_article.title, count(pop_article.path) as\
-               total from (select articles.title, log.path from articles,\
-               log where replace(log.path, '/article/', '')=articles.slug)\
-               as pop_article group by pop_article.title order by total desc\
-               limit 3;")
+    c.execute("""SELECT pop_article.title, COUNT(pop_article.path) AS
+               total FROM (SELECT articles.title, log.path FROM articles,
+               log WHERE replace(log.path, '/article/', '')=articles.slug)
+               AS pop_article GROUP BY pop_article.title ORDER BY total DESC
+               LIMIT 3;""")
     article = c.fetchall()
     db.close()
     return article
@@ -27,11 +28,11 @@ def popular_author():
     Who are the most popular article authors of all time?"""
     db = connect()
     c = db.cursor()
-    c.execute("select authors.name, count(pop_author.path) from authors,\
-               (select articles.author, log.path from articles, log where\
-               replace(log.path, '/article/', '')=articles.slug) as\
-               pop_author where authors.id=pop_author.author group by\
-               authors.name order by count desc limit 4;")
+    c.execute("""SELECT authors.name, COUNT(pop_author.path) FROM authors,
+               (SELECT articles.author, log.path FROM articles, log WHERE
+               replace(log.path, '/article/', '')=articles.slug) AS
+               pop_author WHERE authors.id=pop_author.author GROUP BY
+               authors.name ORDER BY count DESC LIMIT 4;""")
     author = c.fetchall()
     db.close()
     return author
@@ -42,15 +43,15 @@ def error():
     On which days did more than 1% of requests lead to errors?"""
     db = connect()
     c = db.cursor()
-    c.execute("select result.date, result.error*100.0/total as percent from\
-               (select total_error.date, total_error.count as error,\
-               total_status.count as total from (select substring\
-               (cast(log.time as varchar),1,10) as date,count(log.status)\
-               from log group by date) as total_status inner join\
-              (select substring(cast(log.time as varchar),1,10) as date,\
-              count(log.status) from log where log.status!='200 OK' group\
-              by date) as total_error on total_status.date=total_error.date)\
-              as result order by percent desc limit 1;")
+    c.execute("""SELECT result.date, result.error*100.0/total AS percent FROM
+               (SELECT total_error.date, total_error.count AS error,
+               total_status.count AS total FROM (SELECT substring
+               (cast(log.time AS VARCHAR),1,10) as date,COUNT(log.status)
+               FROM log GROUP BY date) AS total_status INNER JOIN
+               (SELECT substring(cast(log.time AS VARCHAR), 1, 10) AS date,
+               COUNT(log.status) FROM log WHERE log.status!='200 OK' group
+               by date) AS total_error ON total_status.date=total_error.date)
+               AS result ORDER BY percent DESC LIMIT 1;""")
     error = c.fetchall()
     db.close()
     return error
